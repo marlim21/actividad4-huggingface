@@ -164,7 +164,7 @@ Partición `test` completa (5 000 reseñas), FP32, `batch_size=32`, `max_length=
 - F1 de la clase neutral: 0,471 (nlptown), 0,233 (XLM-R), 0,127 (DistilmBERT).
 - En su escala de 5 estrellas, nlptown obtuvo 56,5 % de exactitud y 93,1 % con ±1 estrella (la *model card* publica 58 % y 95 % para español con otros datos).
 - En la T4, el rendimiento en lote está limitado en parte por la tokenización en los 2 núcleos de CPU de Colab, por eso no es muy superior al de la GPU de Apple.
-- **Procedencia de `results/colab_gpu/`:** la descarga automática del ZIP desde Colab no se completó; los CSV y el JSON se transcribieron del texto que imprimió el notebook en Colab, `predictions.csv` se copió de la ejecución local tras verificar que su MD5 coincide con el calculado en Colab, y las figuras se regeneraron localmente. Capturas de la ejecución en `results/colab_gpu/evidencia/`.
+- `results/colab_gpu/` contiene los archivos originales descargados de Colab (más las matrices de confusión en CSV, calculadas a partir de `predictions.csv`). Capturas de la ejecución en `results/colab_gpu/evidencia/`.
 
 Figuras: [matrices de confusión](results/colab_gpu/figures/confusion_matrices.png) · [F1 vs. rendimiento](results/colab_gpu/figures/f1_vs_throughput.png).
 

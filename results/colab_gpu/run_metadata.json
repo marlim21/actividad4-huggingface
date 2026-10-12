@@ -37,5 +37,5 @@
     "timed_repeats": 3,
     "online_samples": 200
   },
-  "provenance": "Ejecución del notebook en Google Colab (GPU Tesla T4, driver 580.82.07, CUDA 13.0) el 2026-10-12. La descarga automática de colab_gpu_results.zip no se completó; model_comparison.csv, per_class_metrics.csv y este JSON se transcribieron del texto impreso por el notebook. cpu_count y ram_total_gb provienen de la salida de la sección 2 del notebook. predictions.csv es una copia de results/local_mps/predictions.csv: su MD5 (2889bed90f24867ee45a75231af79949) coincide con el calculado en Colab. Las figuras y matrices de confusión se regeneraron localmente a partir de estos archivos."
+  "provenance": "Archivos originales de la ejecución del notebook en Google Colab (GPU Tesla T4, driver 580.82.07, CUDA 13.0) el 2026-10-12, descargados como colab_gpu_results.zip. Se añadieron cpu_count y ram_total_gb, tomados de la salida de la sección 2 del notebook. Los archivos confusion_*.csv se calcularon localmente a partir de predictions.csv."
 }
