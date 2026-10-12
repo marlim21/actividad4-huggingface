@@ -1,0 +1,10 @@
+modelo,clase,precision,recall,f1,soporte
+mBERT-nlptown,negativo,0.8116,0.842,0.8265,2000
+mBERT-nlptown,neutral,0.4769,0.465,0.4709,1000
+mBERT-nlptown,positivo,0.8615,0.84,0.8506,2000
+XLM-R-cardiffnlp,negativo,0.6763,0.8275,0.7443,2000
+XLM-R-cardiffnlp,neutral,0.2878,0.196,0.2332,1000
+XLM-R-cardiffnlp,positivo,0.8136,0.7615,0.7867,2000
+DistilmBERT-lxyuan,negativo,0.6747,0.668,0.6714,2000
+DistilmBERT-lxyuan,neutral,0.2443,0.086,0.1272,1000
+DistilmBERT-lxyuan,positivo,0.6518,0.8695,0.7451,2000

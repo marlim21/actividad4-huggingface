@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-10-11T23:50:08",
+  "device": "mps",
+  "device_description": "Apple MPS",
+  "versions": {
+    "python": "3.13.14",
+    "torch": "2.14.1",
+    "transformers": "5.19.0",
+    "datasets": "5.1.0",
+    "tokenizers": "0.23.3",
+    "sentencepiece": "0.2.2",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.6",
+    "numpy": "2.5.4",
+    "matplotlib": "3.11.2",
+    "psutil": "7.2.2",
+    "huggingface_hub": "2.2.0"
+  },
+  "seed": 42,
+  "dataset": {
+    "id": "SetFit/amazon_reviews_multi_es",
+    "revision": "16015418b488c9186fce74b058877ea939ca934d",
+    "split": "test",
+    "n_records": 5000
+  },
+  "models": {
+    "nlptown/bert-base-multilingual-uncased-sentiment": "8f6f4e3a8f70be4b65d3a4a8762b6d781cda240d",
+    "cardiffnlp/twitter-xlm-roberta-base-sentiment": "f2f1202b1bdeb07342385c3f807f9c07cd8f5cf8",
+    "lxyuan/distilbert-base-multilingual-cased-sentiments-student": "cf991100d706c13c0a080c097134c05b7f436c45"
+  },
+  "inference": {
+    "batch_size": 32,
+    "max_length": 256,
+    "warmup_batches": 3,
+    "timed_repeats": 3,
+    "online_samples": 200
+  }
+}

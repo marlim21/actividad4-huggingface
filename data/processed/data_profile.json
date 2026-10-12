@@ -1,0 +1,71 @@
+{
+  "generated_at": "2026-10-11T23:22:13",
+  "dataset_id": "SetFit/amazon_reviews_multi_es",
+  "dataset_revision": "16015418b488c9186fce74b058877ea939ca934d",
+  "split": "test",
+  "seed": 42,
+  "n_records": 5000,
+  "null_values": {
+    "id": 0,
+    "text": 0,
+    "label": 0,
+    "label_text": 0
+  },
+  "empty_texts": 0,
+  "duplicate_ids": 0,
+  "duplicate_text_rows": 6,
+  "duplicate_texts_with_conflicting_labels": 1,
+  "stars_distribution": {
+    "1": 1000,
+    "2": 1000,
+    "3": 1000,
+    "4": 1000,
+    "5": 1000
+  },
+  "sentiment_distribution": {
+    "negativo": 2000,
+    "neutral": 1000,
+    "positivo": 2000
+  },
+  "chars": {
+    "count": 5000.0,
+    "mean": 151.9,
+    "std": 132.5,
+    "min": 20.0,
+    "25%": 69.0,
+    "50%": 122.0,
+    "75%": 186.0,
+    "max": 1789.0
+  },
+  "words": {
+    "count": 5000.0,
+    "mean": 27.9,
+    "std": 24.3,
+    "min": 2.0,
+    "25%": 13.0,
+    "50%": 22.0,
+    "75%": 34.0,
+    "max": 366.0
+  },
+  "max_length": 256,
+  "token_profile": {
+    "nlptown/bert-base-multilingual-uncased-sentiment": {
+      "mean": 40.3,
+      "p95": 98,
+      "max": 492,
+      "pct_over_max_length": 0.26
+    },
+    "cardiffnlp/twitter-xlm-roberta-base-sentiment": {
+      "mean": 39.3,
+      "p95": 96,
+      "max": 464,
+      "pct_over_max_length": 0.24
+    },
+    "lxyuan/distilbert-base-multilingual-cased-sentiments-student": {
+      "mean": 42.3,
+      "p95": 103,
+      "max": 496,
+      "pct_over_max_length": 0.28
+    }
+  }
+}

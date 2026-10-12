@@ -1,0 +1,16 @@
+# Dependencias para reproducir el experimento (Python >= 3.10).
+# En Google Colab NO reinstale torch: use la versión con CUDA preinstalada.
+torch>=2.6            # >=2.6 requerido por transformers para leer pesos .bin (modelo de Cardiff)
+transformers==5.19.0
+datasets==5.1.0
+huggingface_hub==2.2.0
+sentencepiece==0.2.2  # tokenizador de XLM-RoBERTa
+protobuf==7.36.2      # conversión del tokenizador sentencepiece
+scikit-learn==1.9.1
+pandas==3.0.6
+numpy==2.5.4
+matplotlib==3.11.2
+psutil==7.2.2
+
+# Solo para regenerar docs/analisis_comparativo.docx (docs/build_report.py)
+python-docx==1.2.0

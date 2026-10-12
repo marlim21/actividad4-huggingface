@@ -1,0 +1,41 @@
+# --- Secretos y credenciales ---
+.env
+.env.*
+*.env
+secrets*
+*credentials*
+*.pem
+*.key
+id_rsa*
+.huggingface/
+hf_token*
+token*.txt
+
+# --- Entornos y cachés ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.cache/
+.pytest_cache/
+*.log
+
+# --- Modelos descargados (se recuperan desde Hugging Face Hub) ---
+models/
+*.safetensors
+*.bin
+*.pt
+*.onnx
+
+# --- Datos con licencia que prohíbe republicar (se regeneran con src/prepare_data.py) ---
+data/processed/dataset.csv
+data/raw/
+*.xlsx
+
+# --- Entregables empaquetados y temporales ---
+*.zip
+.DS_Store
+~$*
+*.tmp
