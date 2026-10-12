@@ -68,10 +68,10 @@ actividad4-huggingface/
 │       └── dataset.csv             # se genera localmente (no se publica)
 ├── results/
 │   ├── model_comparison.csv        # tabla consolidada de todas las ejecuciones
-│   ├── local_mps/                  # ejecución de referencia: GPU Apple M2 Pro (MPS)
-│   ├── local_cpu/                  # misma evaluación en CPU
-│   ├── notebook_local/             # resultados del notebook ejecutado en local (validación)
-│   └── colab_gpu/                  # se agrega al ejecutar el notebook en Colab (pendiente)
+│   ├── colab_gpu/                  # ejecución de referencia: notebook en Colab, GPU Tesla T4 (+ evidencia/ con capturas)
+│   ├── local_mps/                  # scripts en Apple M2 Pro, GPU vía MPS
+│   ├── local_cpu/                  # scripts en Apple M2 Pro, CPU
+│   └── notebook_local/             # notebook ejecutado en local (validación scripts = notebook)
 └── docs/
     ├── analisis_comparativo.docx   # informe técnico
     └── build_report.py             # genera el informe a partir de results/
@@ -151,28 +151,28 @@ python docs/build_report.py
 
 ## 10. Resultados experimentales
 
-Partición `test` completa (5 000 reseñas), FP32, `batch_size=32`, `max_length=256`. Ejecutado el 11-oct-2026 en un Apple M2 Pro (16 GB) con PyTorch 2.14.1 y Transformers 5.19.0.
+Partición `test` completa (5 000 reseñas), FP32, `batch_size=32`, `max_length=256`. **Ejecución de referencia: notebook en Google Colab con GPU NVIDIA Tesla T4** (12-oct-2026; PyTorch 2.11.0+cu130, Transformers 5.19.0). Se repitió con los scripts en un Apple M2 Pro (GPU MPS y CPU).
 
-| Modelo | Accuracy | Precision macro | Recall macro | **F1 macro** | F1 weighted | Recall negativo | Rendimiento MPS (reseñas/s) | p95 en línea MPS (ms) | Rendimiento CPU (reseñas/s) |
-|---|---|---|---|---|---|---|---|---|---|
-| mBERT-nlptown | 0,766 | 0,717 | 0,716 | **0,716** | 0,765 | 0,842 | 98,4 | 40,9 | 46,7 |
-| XLM-R-cardiffnlp | 0,675 | 0,593 | 0,595 | 0,588 | 0,659 | 0,828 | 107,6 | 18,5 | 48,3 |
-| DistilmBERT-lxyuan | 0,632 | 0,524 | 0,541 | 0,514 | 0,592 | 0,668 | 204,5 | 13,2 | 90,1 |
+| Modelo | Accuracy | Precision macro | Recall macro | **F1 macro** | F1 weighted | Recall negativo | Reseñas/s T4 | p95 en línea T4 (ms) | Memoria pico T4 (GB) | Reseñas/s MPS | Reseñas/s CPU |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| mBERT-nlptown | 0,766 | 0,717 | 0,716 | **0,716** | 0,765 | 0,842 | 131,1 | 40,9 | 0,89 | 98,4 | 46,7 |
+| XLM-R-cardiffnlp | 0,675 | 0,593 | 0,595 | 0,588 | 0,659 | 0,828 | 141,4 | 15,2 | 1,30 | 107,6 | 48,3 |
+| DistilmBERT-lxyuan | 0,632 | 0,524 | 0,541 | 0,514 | 0,592 | 0,668 | 247,7 | 5,7 | 0,77 | 204,5 | 90,1 |
 
-- Las métricas de calidad fueron **idénticas en MPS y en CPU**; los tiempos dependen del dispositivo.
+- **Las predicciones fueron idénticas en los cuatro entornos** (Colab T4, MPS, CPU y notebook local): el archivo `predictions.csv` tiene el mismo MD5 (`2889bed9…`). Las métricas de calidad no dependen del hardware; solo los tiempos.
 - IC 95 % del F1 macro (bootstrap, 1 000 remuestreos): nlptown [0,702; 0,728] · XLM-R [0,575; 0,601] · DistilmBERT [0,502; 0,526]. Diferencia pareada nlptown − XLM-R: [0,113; 0,144].
 - F1 de la clase neutral: 0,471 (nlptown), 0,233 (XLM-R), 0,127 (DistilmBERT).
 - En su escala de 5 estrellas, nlptown obtuvo 56,5 % de exactitud y 93,1 % con ±1 estrella (la *model card* publica 58 % y 95 % para español con otros datos).
-- La memoria reportada por MPS no distingue entre modelos (≈ 2 GB en los tres casos, reserva del asignador); el informe usa la memoria de pesos estimada en FP32 (0,65 / 1,09 / 0,53 GB). En Colab se registra la memoria pico real de CUDA.
-- **Pendiente:** ejecución del notebook en Google Colab con GPU CUDA (`results/colab_gpu/`). Los tiempos de esta tabla **no** son de Colab.
+- En la T4, el rendimiento en lote está limitado en parte por la tokenización en los 2 núcleos de CPU de Colab, por eso no es muy superior al de la GPU de Apple.
+- **Procedencia de `results/colab_gpu/`:** la descarga automática del ZIP desde Colab no se completó; los CSV y el JSON se transcribieron del texto que imprimió el notebook en Colab, `predictions.csv` se copió de la ejecución local tras verificar que su MD5 coincide con el calculado en Colab, y las figuras se regeneraron localmente. Capturas de la ejecución en `results/colab_gpu/evidencia/`.
 
-Figuras: [matrices de confusión](results/local_mps/figures/confusion_matrices.png) · [F1 vs. rendimiento](results/local_mps/figures/f1_vs_throughput.png).
+Figuras: [matrices de confusión](results/colab_gpu/figures/confusion_matrices.png) · [F1 vs. rendimiento](results/colab_gpu/figures/f1_vs_throughput.png).
 
 ## 11. Conclusiones
 
 - **Mejor desempeño predictivo:** `nlptown/bert-base-multilingual-uncased-sentiment` (F1 macro 0,716; mejor en las tres clases).
 - **Mejor eficiencia:** `lxyuan/distilbert-base-multilingual-cased-sentiments-student` (≈ 2× más rápido), pero casi no reconoce la clase neutral.
-- **Mejor equilibrio y recomendado:** `nlptown/bert-base-multilingual-uncased-sentiment`. Es el único que cumple todos los umbrales propuestos (F1 macro ≥ 0,60; recall negativo ≥ 0,75; ≥ 50 reseñas/s y p95 ≤ 100 ms en GPU), está ajustado al dominio de reseñas y tiene licencia MIT.
+- **Mejor equilibrio y recomendado:** `nlptown/bert-base-multilingual-uncased-sentiment`. Es el único que cumple todos los umbrales propuestos, verificados en la T4 (F1 macro ≥ 0,60; recall negativo ≥ 0,75; ≥ 50 reseñas/s; p95 ≤ 100 ms; memoria pico ≤ 2 GB), está ajustado al dominio de reseñas y tiene licencia MIT.
 - El tamaño no determinó la calidad: XLM-R tiene 66 % más parámetros (sobre todo en su vocabulario) y quedó por debajo del modelo especializado.
 
 ## 12. Limitaciones
@@ -182,18 +182,18 @@ Figuras: [matrices de confusión](results/local_mps/figures/confusion_matrices.p
 - La regla 3★ = neutral es una convención; la clase neutral es ambigua para los tres modelos.
 - NLP Town no documenta el origen de sus reseñas de entrenamiento: posible contaminación o ventaja de dominio.
 - Los umbrales de aceptación son propuestos, no validados por una organización real.
-- Los tiempos de GPU se midieron en Apple MPS; falta la medición en Colab con CUDA.
+- Los tiempos dependen de la GPU que asigne Colab; una T4 distinta o más carga en la CPU del entorno pueden cambiarlos.
 
 ## 13. Estado de validación y cumplimiento de la rúbrica
 
 | Criterio (25 % c/u) | Evidencia | Ubicación | Estado |
 |---|---|---|---|
 | 1. Selección y análisis de modelos | Ecosistema HF (Models, Datasets, Spaces), criterios, 3 modelos justificados, descartes | Informe §4–5, este README §3 | Documentado y verificado contra el Hub |
-| 2. Implementación en Colab | Notebook por secciones, verificación de GPU, dependencias, carga reproducible, inferencia | `notebooks/` | Ejecutado y validado **en local (MPS)** sin errores; **pendiente la ejecución en Colab con GPU** |
+| 2. Implementación en Colab | Notebook por secciones, verificación de GPU, dependencias, carga reproducible, inferencia | `notebooks/`, `results/colab_gpu/evidencia/` | Ejecutado sin errores en **Google Colab con GPU Tesla T4** y en local (MPS) |
 | 3. Evaluación y comparación | Accuracy, precision, recall, F1 macro/weighted, por clase, IC bootstrap, latencia, recursos, trade-offs | `results/`, informe §8–9 | Ejecutado y validado (scripts y notebook dan predicciones idénticas) |
-| 4. Documentación y justificación | Informe Word, README, scripts, repositorio | `docs/`, `README.md`, GitHub | Generado; publicación en GitHub pendiente |
+| 4. Documentación y justificación | Informe Word, README, scripts, repositorio | `docs/`, `README.md`, GitHub | Publicado y verificado en GitHub; faltan los datos personales de la portada |
 
-Qué se ejecutó realmente: `prepare_data.py` y `evaluate_models.py` (MPS y CPU, 5 000 reseñas, 3 repeticiones), el notebook completo en local (MPS) y la instalación de `requirements.txt` en un entorno limpio.
+Qué se ejecutó realmente: el notebook completo en Google Colab (Tesla T4) y en local (MPS); `prepare_data.py` y `evaluate_models.py` (MPS y CPU, 5 000 reseñas, 3 repeticiones); y la instalación de `requirements.txt` en un entorno limpio.
 
 ## 14. Licencias y condiciones de uso
 

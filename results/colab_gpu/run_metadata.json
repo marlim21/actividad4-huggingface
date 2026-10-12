@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-10-12T06:12:53",
+  "device": "cuda",
+  "device_description": "Tesla T4",
+  "cpu_count": 2,
+  "ram_total_gb": 12.7,
+  "versions": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.19.0",
+    "datasets": "5.1.0",
+    "tokenizers": "0.23.2",
+    "sentencepiece": "0.2.2",
+    "scikit-learn": "1.6.1",
+    "pandas": "2.2.3",
+    "numpy": "2.1.3",
+    "matplotlib": "3.10.0",
+    "psutil": "5.9.5",
+    "huggingface_hub": "1.33.0"
+  },
+  "seed": 42,
+  "dataset": {
+    "id": "SetFit/amazon_reviews_multi_es",
+    "revision": "16015418b488c9186fce74b058877ea939ca934d",
+    "split": "test",
+    "n_records": 5000
+  },
+  "models": {
+    "nlptown/bert-base-multilingual-uncased-sentiment": "8f6f4e3a8f70be4b65d3a4a8762b6d781cda240d",
+    "cardiffnlp/twitter-xlm-roberta-base-sentiment": "f2f1202b1bdeb07342385c3f807f9c07cd8f5cf8",
+    "lxyuan/distilbert-base-multilingual-cased-sentiments-student": "cf991100d706c13c0a080c097134c05b7f436c45"
+  },
+  "inference": {
+    "batch_size": 32,
+    "max_length": 256,
+    "warmup_batches": 3,
+    "timed_repeats": 3,
+    "online_samples": 200
+  },
+  "provenance": "Ejecución del notebook en Google Colab (GPU Tesla T4, driver 580.82.07, CUDA 13.0) el 2026-10-12. La descarga automática de colab_gpu_results.zip no se completó; model_comparison.csv, per_class_metrics.csv y este JSON se transcribieron del texto impreso por el notebook. cpu_count y ram_total_gb provienen de la salida de la sección 2 del notebook. predictions.csv es una copia de results/local_mps/predictions.csv: su MD5 (2889bed90f24867ee45a75231af79949) coincide con el calculado en Colab. Las figuras y matrices de confusión se regeneraron localmente a partir de estos archivos."
+}

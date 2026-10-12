@@ -109,6 +109,8 @@ def caption(doc, text):
 def load(reference):
     ref_dir = RES / reference
     comp = pd.read_csv(ref_dir / "model_comparison.csv").set_index("modelo")
+    if "pesos_hub_MB" not in comp:  # el notebook no consulta el tamaño en el Hub; es un dato publicado, igual en todo entorno
+        comp["pesos_hub_MB"] = pd.read_csv(RES / "local_mps" / "model_comparison.csv").set_index("modelo")["pesos_hub_MB"]
     per_class = pd.read_csv(ref_dir / "per_class_metrics.csv")
     meta = json.loads((ref_dir / "run_metadata.json").read_text())
     cpu = RES / "local_cpu" / "model_comparison.csv"
@@ -162,7 +164,7 @@ def build(reference):
     v = meta["versions"]
     c1, c2, c3 = comp.loc[M1], comp.loc[M2], comp.loc[M3]
     is_cuda = meta["device"] == "cuda"
-    dev_txt = (f"GPU {meta['device_description']} (Google Colab)" if is_cuda
+    dev_txt = (f"GPU NVIDIA {meta['device_description']} en Google Colab" if is_cuda
                else "GPU integrada Apple M2 Pro, backend MPS de PyTorch, en equipo local")
     pc = per_class.set_index(["modelo", "clase"])
     gain_f1 = c1["f1_macro"] - c2["f1_macro"]
@@ -228,6 +230,13 @@ def build(reference):
         "fue entrenado específicamente con reseñas de productos y tiene licencia MIT. Su principal limitación "
         f"es la clase neutral (F1 {fmt(pc.loc[(M1, 'neutral'), 'f1'])}), por lo que el prototipo debe usarse "
         "para priorizar reseñas, no para decisiones automáticas sobre clientes individuales."), bold_prefix="Recomendación. ")
+    if is_cuda:
+        para(doc, (
+            "Las cifras de referencia provienen de la ejecución del notebook en Google Colab con una GPU NVIDIA "
+            "Tesla T4. Los mismos procedimientos se ejecutaron con los scripts en un Apple M2 Pro (GPU vía MPS y "
+            "CPU): las predicciones de los tres modelos fueron idénticas en los cuatro entornos (mismo hash MD5 del "
+            "archivo de predicciones), por lo que las métricas de calidad no dependen del hardware; solo cambian "
+            "los tiempos."), bold_prefix="Nota sobre el entorno. ")
     if not is_cuda:
         para(doc, (
             "Las cifras de este documento provienen de la ejecución local de los scripts en un Apple M2 Pro "
@@ -415,8 +424,10 @@ def build(reference):
     # 8. Metodología
     doc.add_heading("7. Metodología experimental", 1)
     table(doc, ["Elemento", "Configuración"], [
-        ["Entorno de referencia", f"{dev_txt}; {meta['cpu_count']} núcleos de CPU; {meta['ram_total_gb']} GB de RAM"],
-        ["Entorno adicional", "CPU del mismo equipo (escenario sin GPU)" if cpu is not None else "—"],
+        ["Entorno de referencia", f"{dev_txt}; {meta['cpu_count']} núcleos de CPU; {fmt(meta['ram_total_gb'], 1)} GB de RAM"],
+        ["Entornos adicionales", ("Apple M2 Pro (16 GB): GPU integrada vía MPS y CPU, con los scripts de src/; "
+                                  "y el mismo notebook ejecutado en local para validar que scripts y notebook coinciden") if is_cuda
+                                 else "CPU del mismo equipo (escenario sin GPU)"],
         ["Entorno objetivo (notebook)", "Google Colab con GPU NVIDIA T4 (resultados en results/colab_gpu/)"],
         ["Software", f"Python {v['python']}, PyTorch {v['torch']}, Transformers {v['transformers']}, "
                      f"Datasets {v['datasets']}, scikit-learn {v['scikit-learn']}, pandas {v['pandas']}"],
@@ -453,10 +464,16 @@ def build(reference):
         ["Rendimiento [E]", *(fmt(comp.loc[m, "rendimiento_reg_s"], 1) + " reseñas/s" for m in (M1, M2, M3))],
         ["Tiempo total 5 000 [E]", *(f"{fmt(comp.loc[m, 'tiempo_total_s'], 1)} ± {fmt(comp.loc[m, 'tiempo_total_std_s'], 1)} s" for m in (M1, M2, M3))],
         ["Latencia en línea p50 / p95 [E]", *(f"{fmt(comp.loc[m, 'online_p50_ms'], 1)} / {fmt(comp.loc[m, 'online_p95_ms'], 1)} ms" for m in (M1, M2, M3))],
-        ["Tiempo de carga [E]", *(fmt(comp.loc[m, "tiempo_carga_s"], 1) + " s (caché local)" for m in (M1, M2, M3))],
+        ["Tiempo de carga [E]", *(fmt(comp.loc[m, "tiempo_carga_s"], 1) + " s (pesos en caché)" for m in (M1, M2, M3))],
         ["Parámetros [E]", *(fmt(comp.loc[m, "parametros_M"], 1) + " M" for m in (M1, M2, M3))],
         ["Memoria de pesos FP32 [Est]", *(fmt(comp.loc[m, "parametros_M"] * 4 / 1024, 2) + " GB" for m in (M1, M2, M3))],
     ]
+    if is_cuda:
+        rows.append(["Memoria pico GPU [E]", *(fmt(comp.loc[m, "memoria_pico_MB"] / 1024, 2) + " GB" for m in (M1, M2, M3))])
+    mps = RES / "local_mps" / "model_comparison.csv"
+    if is_cuda and mps.exists():
+        mps = pd.read_csv(mps).set_index("modelo")
+        rows.append(["Rendimiento GPU Apple M2 Pro (MPS) [E]", *(fmt(mps.loc[m, "rendimiento_reg_s"], 1) + " reseñas/s" for m in (M1, M2, M3))])
     if cpu is not None:
         rows.append(["Rendimiento en CPU [E]", *(fmt(cpu.loc[m, "rendimiento_reg_s"], 1) + " reseñas/s" for m in (M1, M2, M3))])
         rows.append(["Latencia en línea p95 CPU [E]", *(fmt(cpu.loc[m, "online_p95_ms"], 1) + " ms" for m in (M1, M2, M3))])
@@ -538,8 +555,10 @@ def build(reference):
          "En velocidad, NLP Town y XLM-R son similares en lote, pese a que XLM-R tiene 66 % más parámetros: la "
          "diferencia está en el vocabulario (capa de embeddings), no en las capas que se ejecutan."),
         ("¿Qué modelo requiere más recursos? ",
-         f"XLM-R: {fmt(c2['parametros_M'], 0)} M de parámetros, ≈ {fmt(c2['parametros_M'] * 4 / 1024, 2)} GB de pesos en FP32 y "
-         f"{fmt(c2['pesos_hub_MB'] / 1024, 2)} GB de descarga."),
+         f"XLM-R: {fmt(c2['parametros_M'], 0)} M de parámetros, ≈ {fmt(c2['parametros_M'] * 4 / 1024, 2)} GB de pesos en FP32"
+         + (f", {fmt(c2['memoria_pico_MB'] / 1024, 2)} GB de memoria pico en la GPU (frente a {fmt(c1['memoria_pico_MB'] / 1024, 2)} de NLP Town "
+            f"y {fmt(c3['memoria_pico_MB'] / 1024, 2)} de DistilmBERT)" if is_cuda else "")
+         + f" y {fmt(c2['pesos_hub_MB'] / 1024, 2)} GB de descarga."),
         ("¿Una mejora en F1 justifica un mayor tiempo de inferencia? ",
          f"Sí en este caso. Pasar de DistilmBERT a NLP Town duplica el tiempo por reseña "
          f"({fmt(c3['latencia_media_ms'], 1)} → {fmt(c1['latencia_media_ms'], 1)} ms), pero aumenta el F1 macro de "
@@ -549,7 +568,7 @@ def build(reference):
          "sigue dentro de los umbrales de latencia."),
         ("¿Qué ocurre si se deben procesar muchos registros? ",
          f"Con el rendimiento medido, 100 000 reseñas diarias tardarían ≈ {fmt(100000 / c1['rendimiento_reg_s'] / 60, 0)} min con "
-         f"NLP Town y ≈ {fmt(100000 / c3['rendimiento_reg_s'] / 60, 0)} min con DistilmBERT en la GPU de referencia"
+         f"NLP Town y ≈ {fmt(100000 / c3['rendimiento_reg_s'] / 60, 0)} min con DistilmBERT en la GPU de referencia ({meta['device_description']})"
          + (f"; en CPU, ≈ {fmt(100000 / cpu.loc[M1, 'rendimiento_reg_s'] / 60, 0)} y "
             f"≈ {fmt(100000 / cpu.loc[M3, 'rendimiento_reg_s'] / 60, 0)} min" if cpu is not None else "")
          + ". Para un proceso nocturno por lotes, cualquiera es viable; para volúmenes mucho mayores conviene "
@@ -611,13 +630,16 @@ def build(reference):
         ["Recall negativo", "≥ 0,75", *(f"{fmt(comp.loc[m, 'recall_negativo'])} — {ok(comp.loc[m, 'recall_negativo'] >= 0.75)}" for m in (M1, M2, M3))],
         ["Rendimiento en lote (GPU)", "≥ 50 reseñas/s", *(f"{fmt(comp.loc[m, 'rendimiento_reg_s'], 1)} — {ok(comp.loc[m, 'rendimiento_reg_s'] >= 50)}" for m in (M1, M2, M3))],
         ["Latencia p95 en línea (GPU)", "≤ 100 ms", *(f"{fmt(comp.loc[m, 'online_p95_ms'], 1)} — {ok(comp.loc[m, 'online_p95_ms'] <= 100)}" for m in (M1, M2, M3))],
-        ["Memoria de pesos", "≤ 2 GB", *(f"{fmt(comp.loc[m, 'parametros_M'] * 4 / 1024, 2)} GB [Est] — Cumple" for m in (M1, M2, M3))],
+        (["Memoria pico GPU", "≤ 2 GB", *(f"{fmt(comp.loc[m, 'memoria_pico_MB'] / 1024, 2)} GB — {ok(comp.loc[m, 'memoria_pico_MB'] <= 2048)}" for m in (M1, M2, M3))]
+         if is_cuda else
+         ["Memoria de pesos", "≤ 2 GB", *(f"{fmt(comp.loc[m, 'parametros_M'] * 4 / 1024, 2)} GB [Est] — Cumple" for m in (M1, M2, M3))]),
     ], widths=[3.8, 2.6, 3.4, 3.4, 3.4], font=8)
     para(doc, (
         "Justificación: 0,60 de F1 macro es un mínimo útil para triaje en tres clases con una clase neutral ambigua; "
         "0,75 de recall negativo asegura que se escalen al menos tres de cada cuatro quejas; 50 reseñas/s procesa "
         "100 000 reseñas en ≈ 35 min; 100 ms se percibe como respuesta inmediata; 2 GB deja margen en una T4 de 16 GB. "
-        + ("Los umbrales de GPU se evaluaron aquí con la GPU Apple (MPS); deben confirmarse con la ejecución en Colab." if not is_cuda else "")))
+        + ("Los umbrales de GPU se evaluaron aquí con la GPU Apple (MPS); deben confirmarse con la ejecución en Colab." if not is_cuda
+           else "Los umbrales de GPU se verificaron con la Tesla T4 de Colab.")))
     table(doc, ["Riesgo", "Descripción", "Mitigación"], [
         ["Errores de clasificación", "≈ 1 de cada 6 quejas no se detecta; la clase neutral es poco fiable",
          "Usar como priorización con revisión humana; monitorear recall negativo con muestras etiquetadas"],
